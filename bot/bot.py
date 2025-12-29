@@ -7,7 +7,7 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
 from collections import Counter 
 
-
+last_message = "" 
 async def hello(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text(f'Hello {update.effective_user.first_name}')
 
@@ -53,7 +53,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 #env __NV_PRIME_RENDER_OFFLOAD=1 __GLX_VENDOR_LIBRARY_NAME=nvidia vllm serve Qwen/Qwen3-0.6B \--host 127.0.0.1 --port 8000 \--dtype float16 \--gpu-memory-utilization 0.85 \--max-model-len 2048
 
 def build_prompt():
-    return "Ты стендап комик который любит абсурдный и черный юмор. Отвечая на сообщения, попытайся вставить остроумную шутку."
+    return last_message
 
 def ask_llm(text: str) -> str:
     client = OpenAI(
@@ -71,8 +71,9 @@ def ask_llm(text: str) -> str:
 
 def recap():#(username: str) -> str:
     prompt = build_prompt()#username
+    print(prompt)
     if not prompt:
-        return "User not found"
+        return "Something went wrong"
     return ask_llm(prompt)
 
 async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -81,7 +82,9 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
     #    return
     
     #await update.message.reply_text("Working...")
-    
+
+    global last_message
+    last_message = (update.message.text or "").strip()
     try: 
         out = await asyncio.to_thread(recap)#username
         print(out)
